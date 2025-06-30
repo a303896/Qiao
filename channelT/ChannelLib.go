@@ -88,3 +88,12 @@ func Test3() {
 		//	fmt.Println("default:")
 	}
 }
+
+func TestClose() {
+	ch := make(chan int, 1)
+	//close(ch)
+	ch <- 10 //向已关闭的channel写入数据会panic
+	close(ch)
+	res := <-ch //对一个已经被close过的channel进行接收操作依然可以接受到之前已经成功发送的数据；如果channel中已经没有数据的话将产生一个零值的数据
+	fmt.Println(res)
+}

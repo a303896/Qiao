@@ -1,6 +1,7 @@
 package excel
 
 import (
+	"bufio"
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
@@ -304,4 +305,43 @@ func excel2string4() {
 	}
 	strJson, _ := json.Marshal(result)
 	fmt.Printf("%+s\n", strJson)
+}
+
+func exportRedisKey(keyWord string, fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	// 创建一个新的CSV文件
+	f, e := os.Create(fileName + ".csv")
+	if e != nil {
+		log.Fatalf("无法创建文件: %s", e)
+	}
+	defer f.Close()
+	// 创建一个新的csv.Writer
+	writer := csv.NewWriter(f)
+	defer writer.Flush()
+	//写入字段名
+	writer.Write([]string{"db", "type", "redis_key"})
+	scanner := bufio.NewScanner(file)
+	i := 0
+	failCount := 0
+	for scanner.Scan() {
+		text := scanner.Text()
+		formatText := strings.Split(text, " ")
+		if strings.Contains(formatText[2], keyWord) {
+			i++
+			// 将数据写入CSV文件
+			if err := writer.Write(formatText); err != nil {
+				failCount++
+				log.Fatalf("无法写入记录到文件: %s", err)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("total:%d, fail:%d\n", i, failCount)
 }
